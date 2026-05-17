@@ -3,12 +3,14 @@ set -euo pipefail
 
 # ============================================================
 # guardd-suite 统一安装脚本
+# 脚本版本：v1.0.8
 # 默认使用本项目 GitHub Releases 的三个发布包。
 # 如需私有镜像，可通过环境变量覆盖：
 #   GUARDD_PACKAGE_URL=https://your-url/guardd-linux-amd64.tar.gz
 #   GUARDD_CENTER_PACKAGE_URL=https://your-url/guardd-center-linux-amd64.tar.gz
 #   GUARDD_TEST_PACKAGE_URL=https://your-url/guardd-test-linux-amd64.tar.gz
 # ============================================================
+INSTALLER_VERSION="${INSTALLER_VERSION:-v1.0.8}"
 GUARDD_PACKAGE_URL="${GUARDD_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
 GUARDD_CENTER_PACKAGE_URL="${GUARDD_CENTER_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
 GUARDD_TEST_PACKAGE_URL="${GUARDD_TEST_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
@@ -233,6 +235,7 @@ main(){
   echo "========================================"
   echo " guardd-suite 统一安装脚本"
   echo "========================================"
+  echo "脚本版本: $INSTALLER_VERSION"
   echo "guardd 包 URL: $GUARDD_PACKAGE_URL"
   echo "guardd-center 包 URL: $GUARDD_CENTER_PACKAGE_URL"
   echo "guardd-test 包 URL: $GUARDD_TEST_PACKAGE_URL"
