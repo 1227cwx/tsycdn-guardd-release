@@ -30,6 +30,7 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
 
-> 最新包：guardd-center Web 已改为顶部导航、自适应布局、Naive UI 原生组件提示、中文防护模式，并增强统计大屏。
+> 最新包：guardd-center Web 已改为版本号 v1.0.0、北京时间更新日期、顶部导航、自适应布局、Naive UI 原生组件提示、中文防护模式，并增强统计大屏。
+
 
 
