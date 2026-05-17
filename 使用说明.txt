@@ -150,6 +150,8 @@ sudo guardd
 
 进入菜单后可以执行：
 
+菜单顶部会显示当前版本、更新日期、构建提交。
+
 1. 查看当前配置
 2. 修改节点名称
 3. 修改节点分组
@@ -171,6 +173,7 @@ sudo guardd
 选择“检查更新并更新 guardd”后，程序会下载最新 guardd 安装包，
 对比当前 /usr/local/bin/guardd 和最新包内二进制的 SHA256。
 如果不同，会询问是否更新；确认后自动替换二进制并重启 guardd 服务。
+更新包下载到系统临时目录，检查完成、取消更新、无需更新或更新成功后都会自动清理临时文件。
 
 选择“完全卸载 guardd”后，会先停止服务并卸载 XDP，
 然后询问是否删除 /etc/guardd 配置目录、/var/lib/guardd 数据目录。
@@ -193,6 +196,8 @@ sudo guardd-center
 
 进入菜单后可以执行：
 
+菜单顶部会显示当前版本、更新日期、构建提交。
+
 1. 查看当前配置
 2. 修改 Web 监听 IP
 3. 修改 Web 监听端口
@@ -207,6 +212,7 @@ sudo guardd-center
 选择“检查更新并更新 guardd-center”后，程序会下载最新 guardd-center 安装包，
 对比当前 /usr/local/bin/guardd-center 和最新包内二进制的 SHA256。
 如果不同，会询问是否更新；确认后自动替换二进制并重启 guardd-center 服务。
+更新包下载到系统临时目录，检查完成、取消更新、无需更新或更新成功后都会自动清理临时文件。
 
 选择“完全卸载 guardd-center”后，会先停止服务，
 然后询问是否删除 /etc/guardd-center 配置目录、
