@@ -35,6 +35,5 @@ jobs:
             install.sh \
             SHA256SUMS \
             usage.txt \
-            使用说明.txt \
             --title "guardd-suite latest" \
             --notes "公开下载发布包。安装命令：curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash"

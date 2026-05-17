@@ -28,7 +28,6 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 - `guardd-test-linux-amd64.tar.gz`
 - `SHA256SUMS`
 - `usage.txt`
-- `使用说明.txt`
 
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
