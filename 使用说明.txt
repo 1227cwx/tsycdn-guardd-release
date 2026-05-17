@@ -250,7 +250,9 @@ journalctl -u guardd-center -f
 4. 确认 SSH、Nginx、业务流量正常。
 5. 再通过 guardd 或 guardd-center 切换到 enforce。
 6. v1.0.1 起，未配置到 service_ports 的端口默认 PASS，不会因为切换防护模式而默认丢弃 SSH、后台端口或其他业务端口。
-7. normal / elevated / critical 只调整已纳入防护端口的 SYN、UDP、ICMP 限速阈值。
+7. v1.0.2 起，guardd-center 后台切换防护模式必须同时确认 TCP/UDP 防护端口，并下发到节点。
+8. normal / elevated / critical 只调整已纳入防护端口的 SYN、UDP、ICMP 限速阈值。
+9. 首页只展示真实节点状态和 metrics_raw 指标；没有真实指标时显示“暂无真实数据”，不会再显示演示 QPS、演示地域排行或固定峰值。
 
 
 十一、回滚建议

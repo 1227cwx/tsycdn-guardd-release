@@ -30,10 +30,7 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
 
-> 最新包：guardd-center Web 已改为版本号 v1.0.0、北京时间更新日期、顶部导航、自适应布局、Naive UI 原生组件提示、中文防护模式，并增强统计大屏。
-
-
-
+> v1.0.2：guardd-center 切换防护模式时必须确认 TCP/UDP 防护端口，支持单独下发端口设置；首页只显示真实节点状态和 metrics_raw 指标，没有真实数据时显示空状态，不再使用演示 QPS、演示地域排行或固定峰值。
 
 > v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
 
