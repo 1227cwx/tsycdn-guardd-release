@@ -32,5 +32,7 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 > v1.0.2：guardd-center 切换防护模式时必须确认 TCP/UDP 防护端口，支持单独下发端口设置；首页只显示真实节点状态和 metrics_raw 指标，没有真实数据时显示空状态，不再使用演示 QPS、演示地域排行或固定峰值。
 
+> v1.0.3：guardd-center 顶部菜单收敛为总览大屏、节点管理、节点操作；节点列表新增编辑按钮，操作区改为“编辑 / 切换模式 / 更多”，页面左右边距缩小，表格和图表改为更适配当前屏幕宽度。
+
 > v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
 

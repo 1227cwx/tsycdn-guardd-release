@@ -253,6 +253,7 @@ journalctl -u guardd-center -f
 7. v1.0.2 起，guardd-center 后台切换防护模式必须同时确认 TCP/UDP 防护端口，并下发到节点。
 8. normal / elevated / critical 只调整已纳入防护端口的 SYN、UDP、ICMP 限速阈值。
 9. 首页只展示真实节点状态和 metrics_raw 指标；没有真实指标时显示“暂无真实数据”，不会再显示演示 QPS、演示地域排行或固定峰值。
+10. v1.0.3 起，guardd-center 只保留总览大屏、节点管理、节点操作三个顶部菜单；节点列表支持编辑节点信息，表格宽度改为自适应当前屏幕。
 
 
 十一、回滚建议
