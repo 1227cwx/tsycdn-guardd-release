@@ -13,6 +13,12 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 - `1) guardd 节点 Agent`
 - `2) guardd-center 中心管理平台`
 
+## 后续更新/卸载
+
+安装完成后直接执行 `guardd` 或 `guardd-center` 进入交互菜单。
+菜单内已提供“检查更新并更新”和“完全卸载”。
+卸载时会询问是否删除配置、数据库/数据目录和备份目录，不再默认静默保留。
+
 ## latest release 资产
 
 - `install.sh`

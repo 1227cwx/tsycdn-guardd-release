@@ -165,7 +165,16 @@ sudo guardd
 13. 重启 guardd 服务
 14. 停止 guardd 服务
 15. 导出 center 接入信息
-16. 完全卸载 guardd
+16. 检查更新并更新 guardd
+17. 完全卸载 guardd
+
+选择“检查更新并更新 guardd”后，程序会下载最新 guardd 安装包，
+对比当前 /usr/local/bin/guardd 和最新包内二进制的 SHA256。
+如果不同，会询问是否更新；确认后自动替换二进制并重启 guardd 服务。
+
+选择“完全卸载 guardd”后，会先停止服务并卸载 XDP，
+然后询问是否删除 /etc/guardd 配置目录、/var/lib/guardd 数据目录。
+不会再默认保留或默认删除，必须由用户选择。
 
 
 八、guardd-center 后续快捷维护命令
@@ -192,7 +201,17 @@ sudo guardd-center
 6. 数据库备份
 7. 重启 guardd-center 服务
 8. 停止 guardd-center 服务
-9. 完全卸载 guardd-center
+9. 检查更新并更新 guardd-center
+10. 完全卸载 guardd-center
+
+选择“检查更新并更新 guardd-center”后，程序会下载最新 guardd-center 安装包，
+对比当前 /usr/local/bin/guardd-center 和最新包内二进制的 SHA256。
+如果不同，会询问是否更新；确认后自动替换二进制并重启 guardd-center 服务。
+
+选择“完全卸载 guardd-center”后，会先停止服务，
+然后询问是否删除 /etc/guardd-center 配置目录、
+/var/lib/guardd-center 数据目录、/var/backups/guardd-center 备份目录。
+其中 /var/lib/guardd-center 内包含 SQLite 数据库，请按实际需要选择。
 
 
 九、systemd 服务查看
@@ -237,7 +256,7 @@ guardd
 
 如果要完全删除节点 Agent，选择：
 
-16) 完全卸载 guardd
+17) 完全卸载 guardd
 
 
 十二、文件校验
