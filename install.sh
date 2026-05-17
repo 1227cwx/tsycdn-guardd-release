@@ -74,6 +74,15 @@ api:
 service_ports:
   tcp: [80, 443]
   udp: [443]
+port_whitelist:
+  tcp: [22]
+  udp: []
+rules:
+  enabled: [xdp_tcp_syn_rate, xdp_udp_rate, xdp_icmp_rate, xdp_bad_tcp_flags, xdp_fragment_drop, xdp_malformed_drop]
+rule_params:
+  xdp_bad_tcp_flags: {drop_null: true, drop_xmas: true, drop_syn_fin: true, drop_syn_rst: true, drop_fin_rst: true}
+  xdp_fragment_drop: {drop_all_fragments: true}
+  xdp_malformed_drop: {drop_short_headers: true}
 thresholds:
   normal: {syn_pps_per_ip: 200, udp_pps_per_ip: 300, icmp_pps_per_ip: 10}
   elevated: {syn_pps_per_ip: 80, udp_pps_per_ip: 120, icmp_pps_per_ip: 5}

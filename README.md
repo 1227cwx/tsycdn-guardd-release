@@ -40,5 +40,7 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 > v1.0.5：新增 guardd-test 节点本机测试工具；统一安装脚本第 3 项可安装，支持 XDP 内核自测和 veth 隔离实流测试，验证 TCP SYN、UDP、ICMP、Bad TCP Flags、混合场景是否真实命中。
 
+> v1.0.6：guardd-center 新增“防御规则”页面；节点策略下发改为“端口白名单优先放行 + 确定 XDP 规则选择”。默认 TCP 白名单为 22，规则参数可编辑并随模式切换下发节点。
+
 > v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
 
