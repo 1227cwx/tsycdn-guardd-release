@@ -249,6 +249,8 @@ journalctl -u guardd-center -f
 3. 观察一段时间是否有 would_drop 误杀。
 4. 确认 SSH、Nginx、业务流量正常。
 5. 再通过 guardd 或 guardd-center 切换到 enforce。
+6. v1.0.1 起，未配置到 service_ports 的端口默认 PASS，不会因为切换防护模式而默认丢弃 SSH、后台端口或其他业务端口。
+7. normal / elevated / critical 只调整已纳入防护端口的 SYN、UDP、ICMP 限速阈值。
 
 
 十一、回滚建议
@@ -263,6 +265,14 @@ guardd
 12) 卸载当前 XDP 程序，不删除 guardd
 
 这会卸载 XDP 防护，让流量恢复进入 Linux 协议栈。
+
+如果快捷菜单或中心后台无法访问，但还能进入服务器，可以直接执行：
+
+ip link set dev eth0 xdp off
+
+如果网卡不是 eth0，先执行 ip -br addr 查看网卡名后替换。
+
+注意：停止 guardd 服务不等同于卸载 XDP。v1.0.1 起 systemd 正常停止 guardd 时会尝试自动卸载 XDP，但最稳妥的紧急恢复仍然是执行 ip link set dev 网卡 xdp off。
 
 如果要完全删除节点 Agent，选择：
 
