@@ -1,0 +1,250 @@
+guardd-suite 统一安装与维护使用说明
+==================================================
+
+一、文件说明
+--------------------------------------------------
+release 目录内现在只需要一个统一安装脚本：
+
+1. install.sh
+   统一安装脚本。执行后选择安装 guardd 或 guardd-center。
+
+2. guardd-linux-amd64.tar.gz
+   节点 Agent 安装包，部署到每台 CDN 节点服务器。
+
+3. guardd-center-linux-amd64.tar.gz
+   中心管理平台安装包，部署到管理服务器。
+
+4. SHA256SUMS
+   文件完整性校验值。
+
+
+二、URL 外链放置方式
+--------------------------------------------------
+
+默认 GitHub Release 下载地址：
+
+guardd:
+https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz
+
+guardd-center:
+https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz
+
+统一安装脚本：
+https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh
+
+如果你要改成自己的镜像，可以修改 install.sh 顶部的两个 URL，或通过环境变量覆盖。
+
+三、执行统一安装脚本
+--------------------------------------------------
+
+方式一：直接通过 URL 执行，推荐
+
+root 用户：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
+
+普通用户：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo -E bash
+
+
+方式二：通过环境变量覆盖两个安装包 URL
+
+root 用户：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" bash
+
+普通用户：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo env GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" bash
+
+
+方式三：先下载 install.sh 再执行
+
+root 用户：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh -o install.sh
+chmod +x install.sh
+bash install.sh
+
+普通用户：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh -o install.sh
+chmod +x install.sh
+sudo -E bash install.sh
+
+
+四、安装时的选择
+--------------------------------------------------
+
+执行 install.sh 后会出现：
+
+1) guardd 节点 Agent
+2) guardd-center 中心管理平台
+0) 退出
+
+如果当前服务器是 CDN 节点服务器，选择：
+
+1
+
+如果当前服务器是中心管理服务器，选择：
+
+2
+
+
+五、安装 guardd 节点 Agent 时会引导填写
+--------------------------------------------------
+
+1. 防护网卡，例如 eth0
+2. 节点名称，例如 cdn-gz-01
+3. 节点分组，例如 华南机房
+4. API 监听 IP，默认 0.0.0.0
+5. API 监听端口，默认 9443
+6. 允许访问 API 的 center IP/CIDR
+7. API Key，自动生成或手动输入
+8. 初始模式，建议首次选择 observe-only
+9. 节点 API 访问地址
+
+安装完成后会输出：
+
+节点名称
+API 地址
+Key ID
+API Key
+
+这些信息用于在 guardd-center Web 后台添加节点。
+
+
+六、安装 guardd-center 中心管理平台时会引导填写
+--------------------------------------------------
+
+1. Web 监听 IP，默认 0.0.0.0
+2. Web 监听端口，默认 8080
+3. HTTP / HTTPS，自签证书建议选 HTTPS
+4. 管理员用户名，默认 admin
+5. 管理员密码
+6. 指标数据保留天数
+
+安装完成后访问：
+
+https://你的中心服务器IP:8080
+
+如果安装时选择 HTTP，则访问：
+
+http://你的中心服务器IP:8080
+
+
+七、guardd 后续快捷维护命令
+--------------------------------------------------
+
+注意：本项目不使用 guardd status、guardd config set 这类子命令。
+后续所有节点维护都通过直接输入 guardd 进入交互菜单完成。
+
+root 用户：
+
+guardd
+
+普通用户：
+
+sudo guardd
+
+进入菜单后可以执行：
+
+1. 查看当前配置
+2. 修改节点名称
+3. 修改节点分组
+4. 修改 API 监听 IP
+5. 修改 API 监听端口
+6. 修改 API Key
+7. 修改允许访问的 center IP/CIDR
+8. 修改防护网卡
+9. 切换 observe-only / enforce
+10. 切换防护模式 normal / elevated / critical
+11. 查看 XDP 挂载状态
+12. 卸载当前 XDP 程序，不删除 guardd
+13. 重启 guardd 服务
+14. 停止 guardd 服务
+15. 导出 center 接入信息
+16. 完全卸载 guardd
+
+
+八、guardd-center 后续快捷维护命令
+--------------------------------------------------
+
+注意：本项目不使用 guardd-center status、guardd-center config set 这类子命令。
+后续所有中心平台维护都通过直接输入 guardd-center 进入交互菜单完成。
+
+root 用户：
+
+guardd-center
+
+普通用户：
+
+sudo guardd-center
+
+进入菜单后可以执行：
+
+1. 查看当前配置
+2. 修改 Web 监听 IP
+3. 修改 Web 监听端口
+4. 切换 HTTP / HTTPS
+5. 重置管理员密码
+6. 数据库备份
+7. 重启 guardd-center 服务
+8. 停止 guardd-center 服务
+9. 完全卸载 guardd-center
+
+
+九、systemd 服务查看
+--------------------------------------------------
+
+正常情况下不需要手动管理 systemd，菜单里已经提供重启/停止功能。
+如果需要手动查看状态，可以使用：
+
+guardd 节点：
+
+systemctl status guardd
+journalctl -u guardd -f
+
+center 中心：
+
+systemctl status guardd-center
+journalctl -u guardd-center -f
+
+
+十、首次上线建议
+--------------------------------------------------
+
+1. guardd 节点首次安装建议选择 observe-only。
+2. 确认 Web 后台能看到节点在线。
+3. 观察一段时间是否有 would_drop 误杀。
+4. 确认 SSH、Nginx、业务流量正常。
+5. 再通过 guardd 或 guardd-center 切换到 enforce。
+
+
+十一、回滚建议
+--------------------------------------------------
+
+如果节点网络异常，优先在节点服务器执行：
+
+guardd
+
+然后选择：
+
+12) 卸载当前 XDP 程序，不删除 guardd
+
+这会卸载 XDP 防护，让流量恢复进入 Linux 协议栈。
+
+如果要完全删除节点 Agent，选择：
+
+16) 完全卸载 guardd
+
+
+十二、文件校验
+--------------------------------------------------
+
+如果 SHA256SUMS 和安装包在同一目录，Linux 下可以执行：
+
+sha256sum -c SHA256SUMS
+
+确认安装包和脚本未损坏。
