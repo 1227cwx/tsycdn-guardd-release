@@ -6,7 +6,7 @@ guardd-suite 统一安装与维护使用说明
 release 目录内现在只需要一个统一安装脚本：
 
 1. install.sh
-   统一安装脚本。执行后选择安装 guardd 或 guardd-center。
+   统一安装脚本。执行后选择安装 guardd、guardd-center 或 guardd-test。
 
 2. guardd-linux-amd64.tar.gz
    节点 Agent 安装包，部署到每台 CDN 节点服务器。
@@ -14,7 +14,10 @@ release 目录内现在只需要一个统一安装脚本：
 3. guardd-center-linux-amd64.tar.gz
    中心管理平台安装包，部署到管理服务器。
 
-4. SHA256SUMS
+4. guardd-test-linux-amd64.tar.gz
+   节点本机测试工具安装包，部署到需要验证防护效果的 guardd 节点服务器。
+
+5. SHA256SUMS
    文件完整性校验值。
 
 
@@ -29,10 +32,13 @@ https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd
 guardd-center:
 https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz
 
+guardd-test:
+https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz
+
 统一安装脚本：
 https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh
 
-如果你要改成自己的镜像，可以修改 install.sh 顶部的两个 URL，或通过环境变量覆盖。
+如果你要改成自己的镜像，可以修改 install.sh 顶部的三个 URL，或通过环境变量覆盖。
 
 三、执行统一安装脚本
 --------------------------------------------------
@@ -48,15 +54,15 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo -E bash
 
 
-方式二：通过环境变量覆盖两个安装包 URL
+方式二：通过环境变量覆盖三个安装包 URL
 
 root 用户：
 
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" bash
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" GUARDD_TEST_PACKAGE_URL="https://你的域名/guardd-test-linux-amd64.tar.gz" bash
 
 普通用户：
 
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo env GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" bash
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo env GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" GUARDD_TEST_PACKAGE_URL="https://你的域名/guardd-test-linux-amd64.tar.gz" bash
 
 
 方式三：先下载 install.sh 再执行
@@ -81,6 +87,7 @@ sudo -E bash install.sh
 
 1) guardd 节点 Agent
 2) guardd-center 中心管理平台
+3) guardd-test 节点测试工具
 0) 退出
 
 如果当前服务器是 CDN 节点服务器，选择：
@@ -90,6 +97,10 @@ sudo -E bash install.sh
 如果当前服务器是中心管理服务器，选择：
 
 2
+
+如果当前服务器是 guardd 节点，并且要验证本机 XDP 防护效果，选择：
+
+3
 
 
 五、安装 guardd 节点 Agent 时会引导填写
@@ -224,7 +235,75 @@ sudo guardd-center
 其中 /var/lib/guardd-center 内包含 SQLite 数据库，请按实际需要选择。
 
 
-九、systemd 服务查看
+九、guardd-test 节点测试工具
+--------------------------------------------------
+
+guardd-test 是单独的测试二进制，用于验证节点 XDP 防护是否真实命中。
+它必须安装在 guardd 节点服务器本机，并且需要 root 权限运行。
+
+安装方式：
+
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
+
+然后选择：
+
+3) guardd-test 节点测试工具
+
+安装后进入菜单：
+
+guardd-test
+
+普通用户：
+
+sudo guardd-test
+
+菜单功能：
+
+1. 导入节点 Base64 信息
+2. 查看节点状态和实时指标
+3. 切换测试引擎
+4. TCP SYN 测试
+5. UDP 测试
+6. ICMP 测试
+7. Bad TCP Flags 测试
+8. 混合测试
+9. 查看上次测试指标对比
+10. 查看当前配置
+11. 卸载 guardd-test
+
+节点 Base64 信息获取方式：
+
+在 guardd 节点执行：
+
+guardd
+
+然后选择：
+
+15) 导出 center 接入信息
+
+复制输出的 Base64 字符串，再到 guardd-test 菜单里选择“导入节点 Base64 信息”。
+
+测试引擎说明：
+
+1. XDP 内核自测
+   默认推荐。guardd-test 会打开当前网卡上已经挂载的 XDP 程序，
+   在内核里直接执行测试包，不产生公网流量，不会被运营商或云厂商提前拦截。
+
+2. veth 隔离实流测试
+   guardd-test 会临时创建 netns + veth，把同一个 XDP 程序挂到临时 veth，
+   然后从隔离网络命名空间发送真实二层帧进入 XDP。测试完成后自动清理 netns/veth。
+
+测试场景说明：
+
+TCP SYN 测试、UDP 测试、ICMP 测试、Bad TCP Flags 测试、混合测试只是“测试场景”。
+当前选择的测试引擎决定它们走 XDP 内核自测还是 veth 隔离实流测试。
+
+如果节点处于 observe-only，命中规则只会增加 would_drop_observe_only 指标，不会真实丢包。
+如果节点处于 enforce，命中规则会增加对应 drop_syn_rate、drop_udp_rate、drop_icmp_rate、
+drop_bad_tcp_flags 等指标。
+
+
+十、systemd 服务查看
 --------------------------------------------------
 
 正常情况下不需要手动管理 systemd，菜单里已经提供重启/停止功能。
@@ -241,7 +320,7 @@ systemctl status guardd-center
 journalctl -u guardd-center -f
 
 
-十、首次上线建议
+十一、首次上线建议
 --------------------------------------------------
 
 1. guardd 节点首次安装建议选择 observe-only。
@@ -256,9 +335,10 @@ journalctl -u guardd-center -f
 10. v1.0.3 起，guardd-center 只保留总览大屏、节点管理、节点操作三个顶部菜单；节点列表支持编辑节点信息，表格宽度改为自适应当前屏幕。
 11. v1.0.4 起，首页实时数据由 guardd-center 每 3 秒并发拉取所有节点生成，删除节点后实时首页立即移除该节点数据。
 12. v1.0.4 起，添加节点只需要粘贴 guardd 节点导出的 Base64 信息，不再在添加弹窗设置防护端口。
+13. v1.0.5 起，统一安装脚本新增 guardd-test；测试工具支持 XDP 内核自测和 veth 隔离实流测试。
 
 
-十一、回滚建议
+十二、回滚建议
 --------------------------------------------------
 
 如果节点网络异常，优先在节点服务器执行：
@@ -284,7 +364,7 @@ ip link set dev eth0 xdp off
 17) 完全卸载 guardd
 
 
-十二、文件校验
+十三、文件校验
 --------------------------------------------------
 
 如果 SHA256SUMS 和安装包在同一目录，Linux 下可以执行：

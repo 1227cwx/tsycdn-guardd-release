@@ -3,13 +3,15 @@ set -euo pipefail
 
 # ============================================================
 # guardd-suite 统一安装脚本
-# 默认使用本项目 GitHub Releases 的两个发布包。
+# 默认使用本项目 GitHub Releases 的三个发布包。
 # 如需私有镜像，可通过环境变量覆盖：
 #   GUARDD_PACKAGE_URL=https://your-url/guardd-linux-amd64.tar.gz
 #   GUARDD_CENTER_PACKAGE_URL=https://your-url/guardd-center-linux-amd64.tar.gz
+#   GUARDD_TEST_PACKAGE_URL=https://your-url/guardd-test-linux-amd64.tar.gz
 # ============================================================
 GUARDD_PACKAGE_URL="${GUARDD_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
 GUARDD_CENTER_PACKAGE_URL="${GUARDD_CENTER_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
+GUARDD_TEST_PACKAGE_URL="${GUARDD_TEST_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
 
 TTY=/dev/tty
 TMP=$(mktemp -d)
@@ -177,6 +179,34 @@ Web 地址: $SCHEME://服务器IP:$WEB_PORT
 EOF
 }
 
+install_guardd_test(){
+  echo "========================================"
+  echo " guardd-test 节点测试工具安装向导"
+  echo "========================================"
+  echo "安装包 URL: $GUARDD_TEST_PACKAGE_URL"
+  echo "说明：guardd-test 需要安装在 guardd 节点服务器本机，并使用 root 运行。"
+  echo "它不会向公网发起攻击流量；默认使用 XDP 内核自测，也支持 veth 隔离实流测试。"
+  yesno "确认开始安装 guardd-test" "Y" || exit 0
+
+  curl -fL --retry 3 -o "$TMP/guardd-test.tar.gz" "$GUARDD_TEST_PACKAGE_URL"
+  tar -C "$TMP" -xzf "$TMP/guardd-test.tar.gz"
+  install -m 0755 "$TMP"/guardd-test-linux-amd64/guardd-test /usr/local/bin/guardd-test
+  install -d -m 0700 /etc/guardd-test
+  cat <<EOF
+========================================
+ guardd-test 安装完成
+========================================
+维护菜单: root 直接执行 guardd-test，普通用户执行 sudo guardd-test
+建议流程:
+1. 先在 guardd 节点执行 guardd，选择“导出 center 接入信息”，复制 Base64。
+2. 执行 guardd-test，选择“导入节点 Base64 信息”。
+3. 选择 TCP SYN / UDP / ICMP / Bad TCP Flags / 混合测试。
+EOF
+  if yesno "是否立即进入 guardd-test 菜单" "Y"; then
+    /usr/local/bin/guardd-test
+  fi
+}
+
 main(){
   need_root
   need_common
@@ -185,15 +215,18 @@ main(){
   echo "========================================"
   echo "guardd 包 URL: $GUARDD_PACKAGE_URL"
   echo "guardd-center 包 URL: $GUARDD_CENTER_PACKAGE_URL"
+  echo "guardd-test 包 URL: $GUARDD_TEST_PACKAGE_URL"
   echo
   echo "请选择安装组件："
   echo "1) guardd 节点 Agent"
   echo "2) guardd-center 中心管理平台"
+  echo "3) guardd-test 节点测试工具"
   echo "0) 退出"
   choice=$(ask "请输入序号" "1")
   case "$choice" in
     1) install_guardd ;;
     2) install_center ;;
+    3) install_guardd_test ;;
     0) exit 0 ;;
     *) echo "无效选择"; exit 1 ;;
   esac

@@ -12,10 +12,11 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 - `1) guardd 节点 Agent`
 - `2) guardd-center 中心管理平台`
+- `3) guardd-test 节点测试工具`
 
 ## 后续更新/卸载
 
-安装完成后直接执行 `guardd` 或 `guardd-center` 进入交互菜单。
+安装完成后直接执行 `guardd`、`guardd-center` 或 `guardd-test` 进入交互菜单。
 菜单内已提供“检查更新并更新”和“完全卸载”。
 卸载时会询问是否删除配置、数据库/数据目录和备份目录，不再默认静默保留。
 
@@ -24,8 +25,10 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 - `install.sh`
 - `guardd-linux-amd64.tar.gz`
 - `guardd-center-linux-amd64.tar.gz`
+- `guardd-test-linux-amd64.tar.gz`
 - `SHA256SUMS`
 - `usage.txt`
+- `使用说明.txt`
 
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
@@ -35,6 +38,8 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 > v1.0.3：guardd-center 顶部菜单收敛为总览大屏、节点管理、节点操作；节点列表新增编辑按钮，操作区改为“编辑 / 切换模式 / 更多”，页面左右边距缩小，表格和图表改为更适配当前屏幕宽度。
 
 > v1.0.4：guardd-center 每 3 秒并发实时拉取所有节点，首页读取内存实时快照；删除节点后立即移除旧数据。添加节点改为粘贴 guardd 节点导出的 Base64 信息，添加弹窗不再设置防护端口，所有请求按钮补充加载态。
+
+> v1.0.5：新增 guardd-test 节点本机测试工具；统一安装脚本第 3 项可安装，支持 XDP 内核自测和 veth 隔离实流测试，验证 TCP SYN、UDP、ICMP、Bad TCP Flags、混合场景是否真实命中。
 
 > v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
 
