@@ -78,11 +78,22 @@ port_whitelist:
   tcp: [22]
   udp: []
 rules:
-  enabled: [xdp_tcp_syn_rate, xdp_udp_rate, xdp_icmp_rate, xdp_bad_tcp_flags, xdp_fragment_drop, xdp_malformed_drop]
+  enabled: [xdp_tcp_syn_rate, xdp_udp_rate, xdp_icmp_rate, xdp_bad_tcp_flags, xdp_fragment_drop, xdp_malformed_drop, xdp_src_port_zero_drop]
 rule_params:
+  xdp_tcp_syn_rate: {normal_pps_per_ip: 200, elevated_pps_per_ip: 80, critical_pps_per_ip: 30}
+  xdp_tcp_ack_rate: {normal_pps_per_ip: 800, elevated_pps_per_ip: 300, critical_pps_per_ip: 120}
+  xdp_tcp_rst_rate: {normal_pps_per_ip: 200, elevated_pps_per_ip: 80, critical_pps_per_ip: 30}
+  xdp_udp_rate: {normal_pps_per_ip: 300, elevated_pps_per_ip: 120, critical_pps_per_ip: 60}
+  xdp_icmp_rate: {normal_pps_per_ip: 10, elevated_pps_per_ip: 5, critical_pps_per_ip: 2}
   xdp_bad_tcp_flags: {drop_null: true, drop_xmas: true, drop_syn_fin: true, drop_syn_rst: true, drop_fin_rst: true}
   xdp_fragment_drop: {drop_all_fragments: true}
   xdp_malformed_drop: {drop_short_headers: true}
+  xdp_ttl_filter: {min_ttl: 1, max_ttl: 255}
+  xdp_packet_size_filter: {min_packet_len: 0, max_packet_len: 0}
+  xdp_icmp_type_filter: {drop_echo_request: false, drop_timestamp: true, drop_address_mask: true}
+  xdp_tcp_window_filter: {drop_zero_window: false}
+  xdp_udp_length_filter: {min_udp_len: 8, max_udp_len: 0}
+  xdp_src_port_zero_drop: {drop_tcp_src_zero: true, drop_udp_src_zero: true}
 thresholds:
   normal: {syn_pps_per_ip: 200, udp_pps_per_ip: 300, icmp_pps_per_ip: 10}
   elevated: {syn_pps_per_ip: 80, udp_pps_per_ip: 120, icmp_pps_per_ip: 5}
