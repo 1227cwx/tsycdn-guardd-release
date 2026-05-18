@@ -1,113 +1,52 @@
-﻿guardd-suite v0.1.0 内测版统一安装与维护说明
-==================================================
+﻿guardd-suite v0.1.0 使用说明
 
 一、统一安装命令
---------------------------------------------------
-root 用户直接执行：
-
 curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
 
-普通用户执行：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo -E bash
-
-执行后选择：
-
-1) guardd 节点 Agent
-2) guardd-center 中心管理平台
-3) guardd-test 节点测试工具
+脚本启动后选择：
+1) 安装 guardd 节点
+2) 安装 guardd-center 中心端
+3) 安装 guardd-test 节点测试工具
 0) 退出
 
-二、安装包 URL
---------------------------------------------------
-guardd:
-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz
+二、guardd-center 安装说明
+- 安装时需要填写 Web 监听 IP/端口、HTTP/HTTPS、自定义管理员账号密码。
+- 必须配置 MySQL 和 Redis；安装脚本会先测试 MySQL 建表/读写，再测试 Redis PING/写入/读取/删除，全部通过才会继续。
+- 安装时会询问是否安装 GeoIP 离线资源，默认安装；资源包括 DB11 城市库、ASN 库、中文地区、国旗、世界地图。
+- GeoIP 资源默认安装到：/var/lib/guardd-center/geoip
+- systemd 会设置 GUARDD_CENTER_GEOIP_DIR=/var/lib/guardd-center/geoip。
 
-guardd-center:
-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz
+三、guardd 节点安装说明
+- 安装时设置节点名称、分组、API 监听 IP/端口、Key、允许访问 API 的 center IP/CIDR、XDP 初始模式。
+- 安装完成后执行 guardd 进入节点维护菜单。
+- 节点接入 center：在节点菜单导出 Base64 接入信息，复制到 center 的“添加节点”。
 
-guardd-test:
-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz
+四、guardd-test 使用说明
+- 安装命令同统一脚本，选择 3。
+- 执行 guardd-test 进入测试菜单。
+- 测试程序默认使用 veth 隔离实流测试或内核自测，不走公网，避免运营商提前拦截导致无效果。
 
-统一安装脚本：
-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh
+五、Web 管理功能
+- 总览大屏：实时流量趋势、节点状态、端口覆盖、最近 XDP 事件。
+- 节点管理：添加/编辑节点、选择模板下发、观察/实时模式切换、XDP 重载/卸载、节点更新。
+- 防御规则：规则库，只决定哪些规则可被模板选择；规则库修改不会自动影响已经复制到模板里的规则副本。
+- 防护模板：规则 -> 模板 -> 节点。模板包含防护端口、白名单端口和规则副本。
+- 端口画像：基于真实 flow_events 聚合端口、协议、TCP Flags、访问趋势。
+- 流量明细：展示 center 从节点拉取入库的 XDP/L3/L4 包事件，包含源 IP、目标 IP/端口、协议、动作、原因、GeoIP、ASN。
+- TOP 攻击源：按源 IP 聚合请求、拦截、观察命中、协议、端口、原因。
+- 漏量评估：根据 guardd 节点实际看到的攻击流量估算硬件防火墙漏量。
+- 系统管理：center 版本、更新、Web 配置、管理员密码、存储后端、GeoIP 资源状态。
 
-可通过环境变量覆盖：GUARDD_PACKAGE_URL、GUARDD_CENTER_PACKAGE_URL、GUARDD_TEST_PACKAGE_URL。
+六、快捷命令
+安装后直接执行：
+- guardd        进入节点维护菜单
+- guardd-center 进入中心维护菜单
+- guardd-test   进入节点测试工具
 
-三、guardd 节点安装引导
---------------------------------------------------
-会引导填写：防护网卡、节点名称、节点分组、API 监听 IP/端口、允许访问 API 的 center IP/CIDR、API Key、初始观察/实时模式、节点 API 公网/内网访问地址。
-
-首次上线建议选择观察模式。安装完成后复制输出的节点 Base64 信息或 API 信息到 guardd-center 添加节点。
-
-四、guardd-center 安装引导
---------------------------------------------------
-会引导填写：Web 监听 IP、Web 监听端口、HTTP/HTTPS、管理员账号密码、MySQL、Redis、数据保留时间。
-
-MySQL 必须测试通过后才进入 Redis 配置，测试内容包括连接、认证、建表、写入、读取。
-Redis 必须测试通过后才写配置，测试内容包括 PING、写入、读取、删除。
-
-生产配置使用 MySQL + Redis；SQLite 仅保留给开发调试。
-
-五、Web 后台核心逻辑
---------------------------------------------------
-v0.1.0 固定为：
-
-规则库 -> 防护模板 -> 节点下发 -> 节点观察/实时防护 -> center 展示真实数据
-
-节点只有两种执行模式：
-1. 观察模式：命中规则只记录 would_drop，不真正丢包。
-2. 实时防护：命中规则后真实 XDP_DROP。
-
-防护强度、端口、白名单、规则参数全部由“防护模板”体现。节点只选择模板并下发。
-
-六、快捷维护命令
---------------------------------------------------
-节点维护：
-
-guardd
-
-中心维护：
-
-guardd-center
-
-测试工具：
-
-guardd-test
-
-这些命令进入交互式菜单，不使用 guardd status、guardd config set 这类子命令。
-菜单顶部会显示当前版本、更新日期、构建提交。
-
-七、更新说明
---------------------------------------------------
-在 guardd 或 guardd-center 菜单中选择检查更新。如果发现新版本，会提示是否更新；确认后自动下载最新包、替换二进制并重启服务。
-下载的临时安装包在无需更新、取消更新或更新完成后都会自动清理。
-
-Web 后台节点列表也支持节点远程检查/执行更新；系统管理页支持 center 检查/执行更新。
-
-八、卸载说明
---------------------------------------------------
-卸载 guardd 或 guardd-center 时会询问是否删除配置和数据目录，不再默认保留，也不再默认删除。
-
-九、guardd-test 测试工具
---------------------------------------------------
-guardd-test 必须安装在 guardd 节点服务器本机，并使用 root 运行。
-它不会向公网发起攻击流量，默认使用 XDP 内核自测，也支持 veth 隔离实流测试。
-
-测试菜单包括：导入节点 Base64 信息、查看节点状态、切换测试引擎、TCP SYN、UDP、ICMP、Bad TCP Flags、混合测试、指标对比、卸载。
-
-十、紧急恢复
---------------------------------------------------
-如果节点网络异常，优先执行：
-
-guardd
-
-选择“卸载当前 XDP 程序，不删除 guardd”。
-
-如果菜单不可用但还能登录服务器，可执行：
-
-ip link set dev eth0 xdp off
-
-如果网卡不是 eth0，先用 ip -br addr 查看网卡名。
-
-注意：停止 guardd 服务不等同于卸载 XDP。最稳妥的紧急恢复是卸载 XDP。
+七、覆盖下载地址
+可在执行安装脚本前覆盖：
+export GUARDD_PACKAGE_URL=https://your-url/guardd-linux-amd64.tar.gz
+export GUARDD_CENTER_PACKAGE_URL=https://your-url/guardd-center-linux-amd64.tar.gz
+export GUARDD_TEST_PACKAGE_URL=https://your-url/guardd-test-linux-amd64.tar.gz
+export GEOIP_ASSETS_URL=https://your-url/geoip-assets.tar.gz
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash

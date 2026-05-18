@@ -9,11 +9,13 @@ set -euo pipefail
 #   GUARDD_PACKAGE_URL=https://your-url/guardd-linux-amd64.tar.gz
 #   GUARDD_CENTER_PACKAGE_URL=https://your-url/guardd-center-linux-amd64.tar.gz
 #   GUARDD_TEST_PACKAGE_URL=https://your-url/guardd-test-linux-amd64.tar.gz
+#   GEOIP_ASSETS_URL=https://your-url/geoip-assets.tar.gz
 # ============================================================
 INSTALLER_VERSION="${INSTALLER_VERSION:-v0.1.0}"
 GUARDD_PACKAGE_URL="${GUARDD_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
 GUARDD_CENTER_PACKAGE_URL="${GUARDD_CENTER_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
 GUARDD_TEST_PACKAGE_URL="${GUARDD_TEST_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
+GEOIP_ASSETS_URL="${GEOIP_ASSETS_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/geoip-assets.tar.gz}"
 
 TTY=/dev/tty
 TMP=$(mktemp -d)
@@ -60,6 +62,20 @@ test_redis_conn(){
   redis-cli "${args[@]}" SET "$key" ok EX 30 >/dev/null || return 1
   [ "$(redis-cli "${args[@]}" GET "$key")" = "ok" ] || return 1
   redis-cli "${args[@]}" DEL "$key" >/dev/null || return 1
+}
+
+install_geoip_assets(){
+  local target="/var/lib/guardd-center/geoip"
+  if ! yesno "是否安装 GeoIP 离线资源（中文地区、ASN、国旗、世界地图）" "Y"; then
+    return 0
+  fi
+  echo "GeoIP 资源 URL: $GEOIP_ASSETS_URL"
+  install -d -m 0755 "$target"
+  curl -fL --retry 3 -o "$TMP/geoip-assets.tar.gz" "$GEOIP_ASSETS_URL"
+  tar -C "$target" -xzf "$TMP/geoip-assets.tar.gz"
+  chown -R root:root "$target"
+  chmod -R a+rX "$target"
+  echo "GeoIP 离线资源已安装到 $target"
 }
 
 install_guardd(){
@@ -221,6 +237,7 @@ install_center(){
   tar -C "$TMP" -xzf "$TMP/guardd-center.tar.gz"
   install -m 0755 "$TMP"/guardd-center-linux-amd64/guardd-center /usr/local/bin/guardd-center
   install -d -m 0700 /etc/guardd-center/tls /var/lib/guardd-center /var/backups/guardd-center
+  install_geoip_assets
   printf '%s' "$P1" > /etc/guardd-center/bootstrap-admin.pass; chmod 600 /etc/guardd-center/bootstrap-admin.pass
   head -c 32 /dev/urandom > /etc/guardd-center/master.key; chmod 600 /etc/guardd-center/master.key
   head -c 32 /dev/urandom > /etc/guardd-center/session.key; chmod 600 /etc/guardd-center/session.key
@@ -266,6 +283,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 Environment=GUARDD_CENTER_MODE=service
+Environment=GUARDD_CENTER_GEOIP_DIR=/var/lib/guardd-center/geoip
 ExecStart=/usr/local/bin/guardd-center
 Restart=always
 RestartSec=2
