@@ -31,6 +31,8 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
+> v1.0.12：巡检修复系统管理保存路径和 center 更新目标路径：Web 保存配置会写回当前启动使用的配置文件；center 自更新优先更新 `/usr/local/bin/guardd-center`，找不到时回退当前运行二进制。
+
 > v1.0.11：guardd-center 顶部导航重新显示 IP 集合和系统管理；系统管理页提供 center 版本信息、Web 配置、管理员密码维护、center 检查更新和执行更新；节点列表“更多”菜单增加检查节点更新和执行节点更新。
 
 > v1.0.10：防御规则页新增自定义规则删除按钮，内置规则不可删除；规则 Key、规则名称、执行模型、执行动作和每个参数的问号说明都已补充详细用途、填写方式、效果影响和观察模式灰度建议；切换执行模型时会自动刷新说明和参数表单。
