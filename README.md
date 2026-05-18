@@ -31,6 +31,8 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
+> v1.0.10：防御规则页新增自定义规则删除按钮，内置规则不可删除；规则 Key、规则名称、执行模型、执行动作和每个参数的问号说明都已补充详细用途、填写方式、效果影响和观察模式灰度建议；切换执行模型时会自动刷新说明和参数表单。
+
 
 > v1.0.2：guardd-center 切换防护模式时必须确认 TCP/UDP 防护端口，支持单独下发端口设置；首页只显示真实节点状态和真实指标，没有真实数据时显示空状态，不再使用演示 QPS、演示地域排行或固定峰值。
 
