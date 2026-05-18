@@ -3,7 +3,7 @@ set -euo pipefail
 
 # ============================================================
 # guardd-suite 统一安装脚本
-# 脚本版本：v0.1.0003
+# 脚本版本：v0.1.0004
 # 默认使用本项目 GitHub Releases 的三个发布包。
 # 如需私有镜像，可通过环境变量覆盖：
 #   GUARDD_PACKAGE_URL=https://your-url/guardd-linux-amd64.tar.gz
@@ -377,4 +377,5 @@ main(){
 }
 
 main "$@"
+
 
