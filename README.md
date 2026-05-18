@@ -1,58 +1,44 @@
-﻿# tsycdn-guardd-release
+﻿# guardd-suite
 
-这是 `tsycdn-guardd` 的公开下载仓库，只放安装脚本和公开下载资产，不存放源码。guardd-center Web 已内嵌 Vue、Naive UI、ECharts 本地静态文件，不依赖 unpkg/CDN 外链。
+三个二进制：
 
-## 一键安装
+- `guardd`：CDN 节点 eBPF/XDP 防护 Agent。直接输入 `guardd` 进入交互式维护菜单；systemd 通过 `GUARDD_MODE=service` 启动服务模式。
+- `guardd-center`：中心 Web 管理平台。内嵌 Naive UI 页面、Vue/ECharts 本地静态依赖和 SQLite 存储，不依赖 unpkg/CDN 外链。直接输入 `guardd-center` 进入交互式维护菜单；systemd 通过 `GUARDD_CENTER_MODE=service` 启动服务模式。
+- `guardd-test`：节点本机防护测试工具。直接输入 `guardd-test` 进入交互式菜单，支持 XDP 内核自测和 veth 隔离实流测试，不走公网流量。
+
+v1.0.7 起，`guardd-center` 防御规则页改为中文表单配置，不再展示 JSON 参数；每个设置项带问号说明弹窗。节点下发策略按“端口白名单优先放行 -> 业务防护端口 -> 已确定适合 XDP 的防御规则”执行；默认 TCP 白名单为 `22`，当前可下发规则包括 SYN/ACK/RST/UDP/ICMP 限速、异常 TCP Flags、IP 分片、畸形包、TTL、包大小、ICMP 类型、TCP 窗口、UDP 长度、源端口 0 等 L3/L4 规则。
+
+v1.0.8 起，`guardd-center` 增加节点策略版本闭环：每次策略下发都会生成 `policy_version` 和 `policy_digest`，节点成功应用后上报 applied policy；中心可显示期望版本、已生效版本、策略漂移状态，并支持回滚到上一个成功策略快照。
+
+构建：
+
+```bash
+make release
+```
+
+生产统一安装脚本：
 
 ```bash
 curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
 ```
 
-执行后选择：
+执行后选择安装：
 
 - `1) guardd 节点 Agent`
 - `2) guardd-center 中心管理平台`
 - `3) guardd-test 节点测试工具`
 
-## 后续更新/卸载
+默认二进制包下载地址：
 
-安装完成后直接执行 `guardd`、`guardd-center` 或 `guardd-test` 进入交互菜单。
-菜单内已提供“检查更新并更新”和“完全卸载”。
-卸载时会询问是否删除配置、数据库/数据目录和备份目录，不再默认静默保留。
-
-## latest release 资产
-
-- `install.sh`
-- `guardd-linux-amd64.tar.gz`
-- `guardd-center-linux-amd64.tar.gz`
-- `guardd-test-linux-amd64.tar.gz`
-- `SHA256SUMS`
-- `usage.txt`
-
-> 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
-
-> v1.0.12：巡检修复系统管理保存路径和 center 更新目标路径：Web 保存配置会写回当前启动使用的配置文件；center 自更新优先更新 `/usr/local/bin/guardd-center`，找不到时回退当前运行二进制。
-
-> v1.0.11：guardd-center 顶部导航重新显示 IP 集合和系统管理；系统管理页提供 center 版本信息、Web 配置、管理员密码维护、center 检查更新和执行更新；节点列表“更多”菜单增加检查节点更新和执行节点更新。
-
-> v1.0.10：防御规则页新增自定义规则删除按钮，内置规则不可删除；规则 Key、规则名称、执行模型、执行动作和每个参数的问号说明都已补充详细用途、填写方式、效果影响和观察模式灰度建议；切换执行模型时会自动刷新说明和参数表单。
+- `https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz`
+- `https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz`
+- `https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz`
 
 
-> v1.0.2：guardd-center 切换防护模式时必须确认 TCP/UDP 防护端口，支持单独下发端口设置；首页只显示真实节点状态和真实指标，没有真实数据时显示空状态，不再使用演示 QPS、演示地域排行或固定峰值。
+> v1.0.9：继续落地最终升级方案：新增 IPv4 CIDR ignore/drop LPM 集合、防锁死优先放行、auto-ban dry-run/临时封禁配置、per-cpu 包/字节统计、XDP ringbuf 采样事件、Prometheus 指标、节点 Web 远程更新、center Web 系统管理/自更新、管理员密码修改、CI 生成 BPF/测试/打包流程。
 
-> v1.0.3：guardd-center 顶部菜单收敛为总览大屏、节点管理、节点操作；节点列表新增编辑按钮，操作区改为“编辑 / 切换模式 / 更多”，页面左右边距缩小，表格和图表改为更适配当前屏幕宽度。
+> v1.0.10：完善防御规则管理体验：自定义规则支持删除、内置规则禁止删除；规则 Key、规则名称、执行模型、执行动作增加详细问号说明；切换执行模型时自动刷新模型说明和参数表单；每个规则参数的帮助说明补充用途、填写范围、影响和推荐灰度流程。
 
-> v1.0.4：guardd-center 每 3 秒并发实时拉取所有节点，首页读取内存实时快照；删除节点后立即移除旧数据。添加节点改为粘贴 guardd 节点导出的 Base64 信息，添加弹窗不再设置防护端口，所有请求按钮补充加载态。
+> v1.0.11：补齐 guardd-center 顶部导航入口：IP 集合、系统管理重新显示；系统管理页展示版本、Web 配置、管理员密码维护和 center 检查/执行更新按钮；节点列表“更多”菜单增加检查节点更新和执行节点更新。
 
-> v1.0.5：新增 guardd-test 节点本机测试工具；统一安装脚本第 3 项可安装，支持 XDP 内核自测和 veth 隔离实流测试，验证 TCP SYN、UDP、ICMP、Bad TCP Flags、混合场景是否真实命中。
-
-> v1.0.6：guardd-center 新增“防御规则”页面；节点策略下发改为“端口白名单优先放行 + 确定 XDP 规则选择”。默认 TCP 白名单为 22，规则参数可编辑并随模式切换下发节点。
-
-> v1.0.7：防御规则页去掉分类/层级/XDP适合度/动作/类型等冗余列，改成“规则、说明、当前设置、启用、操作”；参数不再展示 JSON，改为中文表单配置，每个设置都有问号说明弹窗。同时扩展到 ACK/RST 限速、TTL、包大小、ICMP 类型、TCP 窗口、UDP 长度、源端口 0 等确定可在 XDP L3/L4 判断的规则。
-
-
-> v1.0.9：新增 IPv4 CIDR ignore/drop LPM、防锁死优先放行、auto-ban dry-run/临时封禁、per-cpu 包/字节统计、XDP 采样事件、Prometheus 指标、节点远程更新、center Web 系统管理/自更新和管理员密码修改。
-
-> v1.0.8：新增节点策略版本闭环。guardd-center 每次下发策略都会生成 policy version 和 digest；guardd 节点成功应用后上报 applied policy，后台可显示期望版本、已生效版本、策略漂移状态，并支持回滚到上一个成功策略快照。
-
-> v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
+> v1.0.13：巡检修复系统管理保存路径和 center 更新目标路径：guardd-center 使用自定义配置文件启动时，Web 保存配置会写回当前配置文件；center 自更新会优先更新实际安装的 `/usr/local/bin/guardd-center`，不存在时回退到当前运行二进制。
