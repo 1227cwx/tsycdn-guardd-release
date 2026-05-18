@@ -31,6 +31,8 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 > 说明：GitHub Release 底层必须有一个 tag，本仓库内部使用 `latest` tag 自动更新，但安装脚本和下载地址不使用版本 tag，只使用 `/releases/latest/download/`。
 
+> v1.0.11：guardd-center 顶部导航重新显示 IP 集合和系统管理；系统管理页提供 center 版本信息、Web 配置、管理员密码维护、center 检查更新和执行更新；节点列表“更多”菜单增加检查节点更新和执行节点更新。
+
 > v1.0.10：防御规则页新增自定义规则删除按钮，内置规则不可删除；规则 Key、规则名称、执行模型、执行动作和每个参数的问号说明都已补充详细用途、填写方式、效果影响和观察模式灰度建议；切换执行模型时会自动刷新说明和参数表单。
 
 
@@ -52,4 +54,3 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 > v1.0.8：新增节点策略版本闭环。guardd-center 每次下发策略都会生成 policy version 和 digest；guardd 节点成功应用后上报 applied policy，后台可显示期望版本、已生效版本、策略漂移状态，并支持回滚到上一个成功策略快照。
 
 > v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
-
