@@ -46,8 +46,13 @@ test_mysql_conn(){
 
 test_redis_conn(){
   local addr="$1" pass="$2" db="$3" tls="$4"
-  local host="${addr%:*}" port="${addr##*:}" args=(-h "$host" -p "$port" -n "$db")
-  [ "$host" = "$port" ] && { host="127.0.0.1"; port="$addr"; args=(-h "$host" -p "$port" -n "$db"); }
+  local host="${addr%:*}"
+  local port="${addr##*:}"
+  if [ "$host" = "$port" ]; then
+    host="127.0.0.1"
+    port="$addr"
+  fi
+  local args=(-h "$host" -p "$port" -n "$db")
   [ -n "$pass" ] && args+=(-a "$pass" --no-auth-warning)
   [ "$tls" = "true" ] && args+=(--tls)
   redis-cli "${args[@]}" PING | grep -qi PONG || return 1
