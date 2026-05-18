@@ -44,6 +44,9 @@ curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/down
 
 > v1.0.7：防御规则页去掉分类/层级/XDP适合度/动作/类型等冗余列，改成“规则、说明、当前设置、启用、操作”；参数不再展示 JSON，改为中文表单配置，每个设置都有问号说明弹窗。同时扩展到 ACK/RST 限速、TTL、包大小、ICMP 类型、TCP 窗口、UDP 长度、源端口 0 等确定可在 XDP L3/L4 判断的规则。
 
+
+> v1.0.9：新增 IPv4 CIDR ignore/drop LPM、防锁死优先放行、auto-ban dry-run/临时封禁、per-cpu 包/字节统计、XDP 采样事件、Prometheus 指标、节点远程更新、center Web 系统管理/自更新和管理员密码修改。
+
 > v1.0.8：新增节点策略版本闭环。guardd-center 每次下发策略都会生成 policy version 和 digest；guardd 节点成功应用后上报 applied policy，后台可显示期望版本、已生效版本、策略漂移状态，并支持回滚到上一个成功策略快照。
 
 > v1.0.1：未配置到 service_ports 的端口默认 PASS，避免切换防护模式后误拦截 SSH、后台端口或其他业务端口；guardd 正常停止时会尝试卸载 XDP。
