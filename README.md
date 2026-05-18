@@ -1,4 +1,4 @@
-﻿# guardd-suite v0.1.0 内测版
+# guardd-suite v0.1.0004 内测版
 
 三个二进制：
 
@@ -6,7 +6,7 @@
 - `guardd-center`：中心 Web 管理平台，使用本地 Vue / Naive UI / ECharts 静态资源，生产存储为 MySQL + Redis。
 - `guardd-test`：节点本机防护测试工具，支持 XDP 内核自测和 veth 隔离实流测试，不走公网流量。
 
-v0.1.0 固定核心链路：
+v0.1.0004 固定核心链路：
 
 ```txt
 规则库 -> 防护模板 -> 节点下发 -> 节点观察/实时防护 -> center 展示真实数据

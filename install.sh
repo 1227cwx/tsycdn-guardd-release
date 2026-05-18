@@ -11,11 +11,15 @@ set -euo pipefail
 #   GUARDD_TEST_PACKAGE_URL=https://your-url/guardd-test-linux-amd64.tar.gz
 #   GEOIP_ASSETS_URL=https://your-url/geoip-assets.tar.gz
 # ============================================================
-INSTALLER_VERSION="${INSTALLER_VERSION:-v0.1.0003}"
-GUARDD_PACKAGE_URL="${GUARDD_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
-GUARDD_CENTER_PACKAGE_URL="${GUARDD_CENTER_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
-GUARDD_TEST_PACKAGE_URL="${GUARDD_TEST_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
-GEOIP_ASSETS_URL="${GEOIP_ASSETS_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/geoip-assets.tar.gz}"
+INSTALLER_VERSION="${INSTALLER_VERSION:-v0.1.0004}"
+GUARDD_PACKAGE_URL="${GUARDD_PACKAGE_URL:-https://ghfast.top/https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
+GUARDD_PACKAGE_FALLBACK_URL="${GUARDD_PACKAGE_FALLBACK_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
+GUARDD_CENTER_PACKAGE_URL="${GUARDD_CENTER_PACKAGE_URL:-https://ghfast.top/https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
+GUARDD_CENTER_PACKAGE_FALLBACK_URL="${GUARDD_CENTER_PACKAGE_FALLBACK_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
+GUARDD_TEST_PACKAGE_URL="${GUARDD_TEST_PACKAGE_URL:-https://ghfast.top/https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
+GUARDD_TEST_PACKAGE_FALLBACK_URL="${GUARDD_TEST_PACKAGE_FALLBACK_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
+GEOIP_ASSETS_URL="${GEOIP_ASSETS_URL:-https://ghfast.top/https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/geoip-assets.tar.gz}"
+GEOIP_ASSETS_FALLBACK_URL="${GEOIP_ASSETS_FALLBACK_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/geoip-assets.tar.gz}"
 
 TTY=/dev/tty
 TMP=$(mktemp -d)
@@ -37,6 +41,20 @@ ensure_cmd(){
   command -v "$cmd" >/dev/null 2>&1 || { echo "缺少 $cmd，请先安装 $pkg"; exit 1; }
 }
 need_center_deps(){ ensure_cmd mysql default-mysql-client; ensure_cmd redis-cli redis-tools; }
+
+download_file(){
+  local out="$1" primary="$2" fallback="${3:-}"
+  echo "Download URL: $primary"
+  if curl -fL --retry 3 -o "$out" "$primary"; then
+    return 0
+  fi
+  if [ -n "$fallback" ] && [ "$fallback" != "$primary" ]; then
+    echo "Primary download failed, fallback URL: $fallback"
+    curl -fL --retry 3 -o "$out" "$fallback"
+    return $?
+  fi
+  return 1
+}
 
 test_mysql_conn(){
   local host="$1" port="$2" db="$3" user="$4" pass="$5" tls="$6"
@@ -71,7 +89,7 @@ install_geoip_assets(){
   fi
   echo "GeoIP 资源 URL: $GEOIP_ASSETS_URL"
   install -d -m 0755 "$target"
-  curl -fL --retry 3 -o "$TMP/geoip-assets.tar.gz" "$GEOIP_ASSETS_URL"
+  download_file "$TMP/geoip-assets.tar.gz" "$GEOIP_ASSETS_URL" "$GEOIP_ASSETS_FALLBACK_URL"
   tar -C "$target" -xzf "$TMP/geoip-assets.tar.gz"
   chown -R root:root "$target"
   chmod -R a+rX "$target"
@@ -99,7 +117,7 @@ install_guardd(){
   PUB_URL=$(ask "节点 API 公网/内网访问地址" "https://${DEFAULT_IP}:${API_PORT}")
   yesno "确认开始安装 guardd" "Y" || exit 0
 
-  curl -fL --retry 3 -o "$TMP/guardd.tar.gz" "$GUARDD_PACKAGE_URL"
+  download_file "$TMP/guardd.tar.gz" "$GUARDD_PACKAGE_URL" "$GUARDD_PACKAGE_FALLBACK_URL"
   tar -C "$TMP" -xzf "$TMP/guardd.tar.gz"
   install -m 0755 "$TMP"/guardd-linux-amd64/guardd /usr/local/bin/guardd
   install -d -m 0700 /etc/guardd/tls /var/lib/guardd
@@ -233,7 +251,7 @@ install_center(){
   HOUR_DAYS=$(ask "小时聚合指标保留天数" "365")
   yesno "确认开始安装 guardd-center" "Y" || exit 0
 
-  curl -fL --retry 3 -o "$TMP/guardd-center.tar.gz" "$GUARDD_CENTER_PACKAGE_URL"
+  download_file "$TMP/guardd-center.tar.gz" "$GUARDD_CENTER_PACKAGE_URL" "$GUARDD_CENTER_PACKAGE_FALLBACK_URL"
   tar -C "$TMP" -xzf "$TMP/guardd-center.tar.gz"
   install -m 0755 "$TMP"/guardd-center-linux-amd64/guardd-center /usr/local/bin/guardd-center
   install -d -m 0700 /etc/guardd-center/tls /var/lib/guardd-center /var/backups/guardd-center
@@ -313,7 +331,7 @@ install_guardd_test(){
   echo "它不会向公网发起攻击流量；默认使用 XDP 内核自测，也支持 veth 隔离实流测试。"
   yesno "确认开始安装 guardd-test" "Y" || exit 0
 
-  curl -fL --retry 3 -o "$TMP/guardd-test.tar.gz" "$GUARDD_TEST_PACKAGE_URL"
+  download_file "$TMP/guardd-test.tar.gz" "$GUARDD_TEST_PACKAGE_URL" "$GUARDD_TEST_PACKAGE_FALLBACK_URL"
   tar -C "$TMP" -xzf "$TMP/guardd-test.tar.gz"
   install -m 0755 "$TMP"/guardd-test-linux-amd64/guardd-test /usr/local/bin/guardd-test
   install -d -m 0700 /etc/guardd-test
