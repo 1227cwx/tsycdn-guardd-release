@@ -3,14 +3,14 @@ set -euo pipefail
 
 # ============================================================
 # guardd-suite 统一安装脚本
-# 脚本版本：v1.0.13
+# 脚本版本：v0.1.0
 # 默认使用本项目 GitHub Releases 的三个发布包。
 # 如需私有镜像，可通过环境变量覆盖：
 #   GUARDD_PACKAGE_URL=https://your-url/guardd-linux-amd64.tar.gz
 #   GUARDD_CENTER_PACKAGE_URL=https://your-url/guardd-center-linux-amd64.tar.gz
 #   GUARDD_TEST_PACKAGE_URL=https://your-url/guardd-test-linux-amd64.tar.gz
 # ============================================================
-INSTALLER_VERSION="${INSTALLER_VERSION:-v1.0.13}"
+INSTALLER_VERSION="${INSTALLER_VERSION:-v0.1.0}"
 GUARDD_PACKAGE_URL="${GUARDD_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz}"
 GUARDD_CENTER_PACKAGE_URL="${GUARDD_CENTER_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-center-linux-amd64.tar.gz}"
 GUARDD_TEST_PACKAGE_URL="${GUARDD_TEST_PACKAGE_URL:-https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-test-linux-amd64.tar.gz}"
@@ -24,6 +24,38 @@ ask_secret(){ local p="$1" v; read -r -s -p "$p: " v < "$TTY"; echo >&2; echo "$
 yesno(){ local p="$1" d="${2:-Y}" v; read -r -p "$p [$d]: " v < "$TTY"; v="${v:-$d}"; [[ "$v" =~ ^[Yy] ]]; }
 need_root(){ [ "$(id -u)" = "0" ] || { echo "请使用 root 执行，普通用户请使用 sudo -E bash install.sh"; exit 1; }; }
 need_common(){ command -v curl >/dev/null || { echo "缺少 curl"; exit 1; }; command -v tar >/dev/null || { echo "缺少 tar"; exit 1; }; command -v systemctl >/dev/null || { echo "缺少 systemd"; exit 1; }; }
+ensure_cmd(){
+  local cmd="$1" pkg="$2"
+  if command -v "$cmd" >/dev/null 2>&1; then return 0; fi
+  if command -v apt-get >/dev/null 2>&1; then
+    echo "缺少 $cmd，正在尝试安装 $pkg ..."
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install -y "$pkg"
+  fi
+  command -v "$cmd" >/dev/null 2>&1 || { echo "缺少 $cmd，请先安装 $pkg"; exit 1; }
+}
+need_center_deps(){ ensure_cmd mysql default-mysql-client; ensure_cmd redis-cli redis-tools; }
+
+test_mysql_conn(){
+  local host="$1" port="$2" db="$3" user="$4" pass="$5" tls="$6"
+  local ssl_args=()
+  if [ "$tls" = "true" ]; then ssl_args=(--ssl-mode=REQUIRED); fi
+  local sql="CREATE TABLE IF NOT EXISTS guardd_install_check(id INT PRIMARY KEY, v VARCHAR(32)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; INSERT INTO guardd_install_check(id,v) VALUES(1,'ok') ON DUPLICATE KEY UPDATE v='ok'; SELECT v FROM guardd_install_check WHERE id=1; DELETE FROM guardd_install_check WHERE id=1;"
+  MYSQL_PWD="$pass" mysql -h "$host" -P "$port" -u "$user" "${ssl_args[@]}" --default-character-set=utf8mb4 "$db" -N -B -e "$sql" | grep -q '^ok$'
+}
+
+test_redis_conn(){
+  local addr="$1" pass="$2" db="$3" tls="$4"
+  local host="${addr%:*}" port="${addr##*:}" args=(-h "$host" -p "$port" -n "$db")
+  [ "$host" = "$port" ] && { host="127.0.0.1"; port="$addr"; args=(-h "$host" -p "$port" -n "$db"); }
+  [ -n "$pass" ] && args+=(-a "$pass" --no-auth-warning)
+  [ "$tls" = "true" ] && args+=(--tls)
+  redis-cli "${args[@]}" PING | grep -qi PONG || return 1
+  local key="guardd:install:test:$$"
+  redis-cli "${args[@]}" SET "$key" ok EX 30 >/dev/null || return 1
+  [ "$(redis-cli "${args[@]}" GET "$key")" = "ok" ] || return 1
+  redis-cli "${args[@]}" DEL "$key" >/dev/null || return 1
+}
 
 install_guardd(){
   echo "========================================"
@@ -138,12 +170,43 @@ install_center(){
   echo "========================================"
   echo " guardd-center 中心安装向导"
   echo "========================================"
+  need_center_deps
   echo "安装包 URL: $GUARDD_CENTER_PACKAGE_URL"
   WEB_IP=$(ask "设置 Web 监听 IP" "0.0.0.0")
   WEB_PORT=$(ask "设置 Web 监听端口" "8080")
   TLS_CHOICE=$(ask "访问协议：1 HTTP，2 HTTPS 自签" "2")
   ADMIN_USER=$(ask "管理员用户名" "admin")
   while true; do P1=$(ask_secret "管理员密码"); P2=$(ask_secret "再次输入管理员密码"); [ "$P1" = "$P2" ] && [ -n "$P1" ] && break; echo "两次密码不一致或为空"; done
+  echo
+  echo "----- MySQL 配置（必须测试通过才能继续）-----"
+  while true; do
+    MYSQL_HOST=$(ask "MySQL 主机地址" "127.0.0.1")
+    MYSQL_PORT=$(ask "MySQL 端口" "3306")
+    MYSQL_DB=$(ask "MySQL 数据库名" "guardd")
+    MYSQL_USER=$(ask "MySQL 用户名" "guardd")
+    MYSQL_PASS=$(ask_secret "MySQL 密码（可空直接回车）")
+    MYSQL_TLS=false; yesno "MySQL 是否启用 TLS/SSL" "N" && MYSQL_TLS=true
+    echo "正在测试 MySQL 连接、读写和建表权限..."
+    if test_mysql_conn "$MYSQL_HOST" "$MYSQL_PORT" "$MYSQL_DB" "$MYSQL_USER" "$MYSQL_PASS" "$MYSQL_TLS"; then
+      echo "MySQL 测试成功。"
+      break
+    fi
+    echo "MySQL 测试失败：请确认数据库已创建、账号密码正确、具备建表/读写权限，并使用 utf8mb4 字符集。"
+  done
+  echo
+  echo "----- Redis 配置（必须测试通过才能继续）-----"
+  while true; do
+    REDIS_ADDR=$(ask "Redis 地址 host:port" "127.0.0.1:6379")
+    REDIS_PASS=$(ask_secret "Redis 密码（可空直接回车）")
+    REDIS_DB=$(ask "Redis DB 编号" "0")
+    REDIS_TLS=false; yesno "Redis 是否启用 TLS" "N" && REDIS_TLS=true
+    echo "正在测试 Redis PING / 写入 / 读取 / 删除..."
+    if test_redis_conn "$REDIS_ADDR" "$REDIS_PASS" "$REDIS_DB" "$REDIS_TLS"; then
+      echo "Redis 测试成功。"
+      break
+    fi
+    echo "Redis 测试失败：请确认地址、密码、DB 编号、TLS 配置正确。"
+  done
   RAW_DAYS=$(ask "原始指标保留天数" "7")
   MIN_DAYS=$(ask "分钟聚合指标保留天数" "30")
   HOUR_DAYS=$(ask "小时聚合指标保留天数" "365")
@@ -158,6 +221,8 @@ install_center(){
   head -c 32 /dev/urandom > /etc/guardd-center/session.key; chmod 600 /etc/guardd-center/session.key
   TLS_ENABLED=false
   if [ "$TLS_CHOICE" = "2" ]; then TLS_ENABLED=true; if command -v openssl >/dev/null; then openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=guardd-center" -keyout /etc/guardd-center/tls/server.key -out /etc/guardd-center/tls/server.crt >/dev/null 2>&1; fi; fi
+  MYSQL_PASS_YAML=$(printf '%s' "$MYSQL_PASS" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  REDIS_PASS_YAML=$(printf '%s' "$REDIS_PASS" | sed 's/\\/\\\\/g; s/"/\\"/g')
   cat >/etc/guardd-center/center.yaml <<EOF
 web:
   listen_ip: $WEB_IP
@@ -166,10 +231,25 @@ web:
   tls: {enabled: $TLS_ENABLED, cert_file: /etc/guardd-center/tls/server.crt, key_file: /etc/guardd-center/tls/server.key}
 security: {session_secret_file: /etc/guardd-center/session.key, master_key_file: /etc/guardd-center/master.key, login_rate_limit_per_minute: 10}
 storage:
+  driver: mysql
   sqlite_path: /var/lib/guardd-center/guardd-center.db
+  mysql:
+    host: $MYSQL_HOST
+    port: $MYSQL_PORT
+    database: $MYSQL_DB
+    username: $MYSQL_USER
+    password: "$MYSQL_PASS_YAML"
+    tls: $MYSQL_TLS
+    max_open_conns: 50
+    max_idle_conns: 10
+  redis:
+    addr: $REDIS_ADDR
+    password: "$REDIS_PASS_YAML"
+    db: $REDIS_DB
+    tls: $REDIS_TLS
   backup_dir: /var/backups/guardd-center
   retention: {raw_metrics_days: $RAW_DAYS, minute_metrics_days: $MIN_DAYS, hour_metrics_days: $HOUR_DAYS}
-collector: {scrape_interval_seconds: 5, node_timeout_seconds: 3, max_concurrency: 64}
+collector: {scrape_interval_seconds: 3, node_timeout_seconds: 5, max_concurrency: 64}
 audit: {enabled: true, keep_days: 365}
 bootstrap: {admin_username: $ADMIN_USER, admin_password_file: /etc/guardd-center/bootstrap-admin.pass}
 EOF

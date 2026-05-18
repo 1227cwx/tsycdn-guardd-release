@@ -1,31 +1,25 @@
-﻿guardd-suite 统一安装与维护使用说明
+﻿guardd-suite v0.1.0 内测版统一安装与维护说明
 ==================================================
 
-一、文件说明
+一、统一安装命令
 --------------------------------------------------
-release 目录内现在只需要一个统一安装脚本：
+root 用户直接执行：
 
-1. install.sh
-   统一安装脚本。执行后选择安装 guardd、guardd-center 或 guardd-test。
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
 
-2. guardd-linux-amd64.tar.gz
-   节点 Agent 安装包，部署到每台 CDN 节点服务器。
+普通用户执行：
 
-3. guardd-center-linux-amd64.tar.gz
-   中心管理平台安装包，部署到管理服务器。
+curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo -E bash
 
-4. guardd-test-linux-amd64.tar.gz
-   节点本机测试工具安装包，部署到需要验证防护效果的 guardd 节点服务器。
+执行后选择：
 
-5. SHA256SUMS
-   文件完整性校验值。
+1) guardd 节点 Agent
+2) guardd-center 中心管理平台
+3) guardd-test 节点测试工具
+0) 退出
 
-
-二、URL 外链放置方式
+二、安装包 URL
 --------------------------------------------------
-
-默认 GitHub Release 下载地址：
-
 guardd:
 https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd-linux-amd64.tar.gz
 
@@ -38,346 +32,82 @@ https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/guardd
 统一安装脚本：
 https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh
 
-如果你要改成自己的镜像，可以修改 install.sh 顶部的三个 URL，或通过环境变量覆盖。
+可通过环境变量覆盖：GUARDD_PACKAGE_URL、GUARDD_CENTER_PACKAGE_URL、GUARDD_TEST_PACKAGE_URL。
 
-三、执行统一安装脚本
+三、guardd 节点安装引导
 --------------------------------------------------
+会引导填写：防护网卡、节点名称、节点分组、API 监听 IP/端口、允许访问 API 的 center IP/CIDR、API Key、初始观察/实时模式、节点 API 公网/内网访问地址。
 
-方式一：直接通过 URL 执行，推荐
+首次上线建议选择观察模式。安装完成后复制输出的节点 Base64 信息或 API 信息到 guardd-center 添加节点。
 
-root 用户：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
-
-普通用户：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo -E bash
-
-
-方式二：通过环境变量覆盖三个安装包 URL
-
-root 用户：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" GUARDD_TEST_PACKAGE_URL="https://你的域名/guardd-test-linux-amd64.tar.gz" bash
-
-普通用户：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | sudo env GUARDD_PACKAGE_URL="https://你的域名/guardd-linux-amd64.tar.gz" GUARDD_CENTER_PACKAGE_URL="https://你的域名/guardd-center-linux-amd64.tar.gz" GUARDD_TEST_PACKAGE_URL="https://你的域名/guardd-test-linux-amd64.tar.gz" bash
-
-
-方式三：先下载 install.sh 再执行
-
-root 用户：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh -o install.sh
-chmod +x install.sh
-bash install.sh
-
-普通用户：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh -o install.sh
-chmod +x install.sh
-sudo -E bash install.sh
-
-
-四、安装时的选择
+四、guardd-center 安装引导
 --------------------------------------------------
+会引导填写：Web 监听 IP、Web 监听端口、HTTP/HTTPS、管理员账号密码、MySQL、Redis、数据保留时间。
 
-执行 install.sh 后会出现：
+MySQL 必须测试通过后才进入 Redis 配置，测试内容包括连接、认证、建表、写入、读取。
+Redis 必须测试通过后才写配置，测试内容包括 PING、写入、读取、删除。
 
-1) guardd 节点 Agent
-2) guardd-center 中心管理平台
-3) guardd-test 节点测试工具
-0) 退出
+生产配置使用 MySQL + Redis；SQLite 仅保留给开发调试。
 
-如果当前服务器是 CDN 节点服务器，选择：
-
-1
-
-如果当前服务器是中心管理服务器，选择：
-
-2
-
-如果当前服务器是 guardd 节点，并且要验证本机 XDP 防护效果，选择：
-
-3
-
-
-五、安装 guardd 节点 Agent 时会引导填写
+五、Web 后台核心逻辑
 --------------------------------------------------
+v0.1.0 固定为：
 
-1. 防护网卡，例如 eth0
-2. 节点名称，例如 cdn-gz-01
-3. 节点分组，例如 华南机房
-4. API 监听 IP，默认 0.0.0.0
-5. API 监听端口，默认 9443
-6. 允许访问 API 的 center IP/CIDR
-7. API Key，自动生成或手动输入
-8. 初始模式，建议首次选择 observe-only
-9. 节点 API 访问地址
+规则库 -> 防护模板 -> 节点下发 -> 节点观察/实时防护 -> center 展示真实数据
 
-安装完成后会输出：
+节点只有两种执行模式：
+1. 观察模式：命中规则只记录 would_drop，不真正丢包。
+2. 实时防护：命中规则后真实 XDP_DROP。
 
-节点名称
-API 地址
-Key ID
-API Key
+防护强度、端口、白名单、规则参数全部由“防护模板”体现。节点只选择模板并下发。
 
-这些信息用于在 guardd-center Web 后台添加节点。
-
-
-六、安装 guardd-center 中心管理平台时会引导填写
+六、快捷维护命令
 --------------------------------------------------
-
-1. Web 监听 IP，默认 0.0.0.0
-2. Web 监听端口，默认 8080
-3. HTTP / HTTPS，自签证书建议选 HTTPS
-4. 管理员用户名，默认 admin
-5. 管理员密码
-6. 指标数据保留天数
-
-安装完成后访问：
-
-https://你的中心服务器IP:8080
-
-如果安装时选择 HTTP，则访问：
-
-http://你的中心服务器IP:8080
-
-
-七、guardd 后续快捷维护命令
---------------------------------------------------
-
-注意：本项目不使用 guardd status、guardd config set 这类子命令。
-后续所有节点维护都通过直接输入 guardd 进入交互菜单完成。
-
-root 用户：
+节点维护：
 
 guardd
 
-普通用户：
-
-sudo guardd
-
-进入菜单后可以执行：
-
-菜单顶部会显示当前版本、更新日期、构建提交。
-版本号使用 v主版本.次版本.修订号，例如 v1.0.0。
-更新日期使用北京时间格式，例如 2026-05-17 18:45:00 CST。
-
-1. 查看当前配置
-2. 修改节点名称
-3. 修改节点分组
-4. 修改 API 监听 IP
-5. 修改 API 监听端口
-6. 修改 API Key
-7. 修改允许访问的 center IP/CIDR
-8. 修改防护网卡
-9. 切换 observe-only / enforce
-10. 切换防护模式 normal / elevated / critical
-11. 查看 XDP 挂载状态
-12. 卸载当前 XDP 程序，不删除 guardd
-13. 重启 guardd 服务
-14. 停止 guardd 服务
-15. 导出 center 接入信息
-16. 检查更新并更新 guardd
-17. 完全卸载 guardd
-
-选择“检查更新并更新 guardd”后，程序会下载最新 guardd 安装包，
-对比当前 /usr/local/bin/guardd 和最新包内二进制的 SHA256。
-如果不同，会询问是否更新；确认后自动替换二进制并重启 guardd 服务。
-更新包下载到系统临时目录，检查完成、取消更新、无需更新或更新成功后都会自动清理临时文件。
-
-选择“完全卸载 guardd”后，会先停止服务并卸载 XDP，
-然后询问是否删除 /etc/guardd 配置目录、/var/lib/guardd 数据目录。
-不会再默认保留或默认删除，必须由用户选择。
-
-
-八、guardd-center 后续快捷维护命令
---------------------------------------------------
-
-注意：本项目不使用 guardd-center status、guardd-center config set 这类子命令。
-后续所有中心平台维护都通过直接输入 guardd-center 进入交互菜单完成。
-
-root 用户：
+中心维护：
 
 guardd-center
 
-普通用户：
-
-sudo guardd-center
-
-进入菜单后可以执行：
-
-菜单顶部会显示当前版本、更新日期、构建提交。
-版本号使用 v主版本.次版本.修订号，例如 v1.0.0。
-更新日期使用北京时间格式，例如 2026-05-17 18:45:00 CST。
-
-1. 查看当前配置
-2. 修改 Web 监听 IP
-3. 修改 Web 监听端口
-4. 切换 HTTP / HTTPS
-5. 重置管理员密码
-6. 数据库备份
-7. 重启 guardd-center 服务
-8. 停止 guardd-center 服务
-9. 检查更新并更新 guardd-center
-10. 完全卸载 guardd-center
-
-选择“检查更新并更新 guardd-center”后，程序会下载最新 guardd-center 安装包，
-对比当前 /usr/local/bin/guardd-center 和最新包内二进制的 SHA256。
-如果不同，会询问是否更新；确认后自动替换二进制并重启 guardd-center 服务。
-更新包下载到系统临时目录，检查完成、取消更新、无需更新或更新成功后都会自动清理临时文件。
-
-选择“完全卸载 guardd-center”后，会先停止服务，
-然后询问是否删除 /etc/guardd-center 配置目录、
-/var/lib/guardd-center 数据目录、/var/backups/guardd-center 备份目录。
-其中 /var/lib/guardd-center 内包含 SQLite 数据库，请按实际需要选择。
-
-
-九、guardd-test 节点测试工具
---------------------------------------------------
-
-guardd-test 是单独的测试二进制，用于验证节点 XDP 防护是否真实命中。
-它必须安装在 guardd 节点服务器本机，并且需要 root 权限运行。
-
-安装方式：
-
-curl -fsSL https://github.com/1227cwx/tsycdn-guardd-release/releases/latest/download/install.sh | bash
-
-然后选择：
-
-3) guardd-test 节点测试工具
-
-安装后进入菜单：
+测试工具：
 
 guardd-test
 
-普通用户：
+这些命令进入交互式菜单，不使用 guardd status、guardd config set 这类子命令。
+菜单顶部会显示当前版本、更新日期、构建提交。
 
-sudo guardd-test
+七、更新说明
+--------------------------------------------------
+在 guardd 或 guardd-center 菜单中选择检查更新。如果发现新版本，会提示是否更新；确认后自动下载最新包、替换二进制并重启服务。
+下载的临时安装包在无需更新、取消更新或更新完成后都会自动清理。
 
-菜单功能：
+Web 后台节点列表也支持节点远程检查/执行更新；系统管理页支持 center 检查/执行更新。
 
-1. 导入节点 Base64 信息
-2. 查看节点状态和实时指标
-3. 切换测试引擎
-4. TCP SYN 测试
-5. UDP 测试
-6. ICMP 测试
-7. Bad TCP Flags 测试
-8. 混合测试
-9. 查看上次测试指标对比
-10. 查看当前配置
-11. 卸载 guardd-test
+八、卸载说明
+--------------------------------------------------
+卸载 guardd 或 guardd-center 时会询问是否删除配置和数据目录，不再默认保留，也不再默认删除。
 
-节点 Base64 信息获取方式：
+九、guardd-test 测试工具
+--------------------------------------------------
+guardd-test 必须安装在 guardd 节点服务器本机，并使用 root 运行。
+它不会向公网发起攻击流量，默认使用 XDP 内核自测，也支持 veth 隔离实流测试。
 
-在 guardd 节点执行：
+测试菜单包括：导入节点 Base64 信息、查看节点状态、切换测试引擎、TCP SYN、UDP、ICMP、Bad TCP Flags、混合测试、指标对比、卸载。
+
+十、紧急恢复
+--------------------------------------------------
+如果节点网络异常，优先执行：
 
 guardd
 
-然后选择：
+选择“卸载当前 XDP 程序，不删除 guardd”。
 
-15) 导出 center 接入信息
-
-复制输出的 Base64 字符串，再到 guardd-test 菜单里选择“导入节点 Base64 信息”。
-
-测试引擎说明：
-
-1. XDP 内核自测
-   默认推荐。guardd-test 会打开当前网卡上已经挂载的 XDP 程序，
-   在内核里直接执行测试包，不产生公网流量，不会被运营商或云厂商提前拦截。
-
-2. veth 隔离实流测试
-   guardd-test 会临时创建 netns + veth，把同一个 XDP 程序挂到临时 veth，
-   然后从隔离网络命名空间发送真实二层帧进入 XDP。测试完成后自动清理 netns/veth。
-
-测试场景说明：
-
-TCP SYN 测试、UDP 测试、ICMP 测试、Bad TCP Flags 测试、混合测试只是“测试场景”。
-当前选择的测试引擎决定它们走 XDP 内核自测还是 veth 隔离实流测试。
-
-如果节点处于 observe-only，命中规则只会增加 would_drop_observe_only 指标，不会真实丢包。
-如果节点处于 enforce，命中规则会增加对应 drop_syn_rate、drop_udp_rate、drop_icmp_rate、
-drop_bad_tcp_flags 等指标。
-
-
-十、systemd 服务查看
---------------------------------------------------
-
-正常情况下不需要手动管理 systemd，菜单里已经提供重启/停止功能。
-如果需要手动查看状态，可以使用：
-
-guardd 节点：
-
-systemctl status guardd
-journalctl -u guardd -f
-
-center 中心：
-
-systemctl status guardd-center
-journalctl -u guardd-center -f
-
-
-十一、首次上线建议
---------------------------------------------------
-
-1. guardd 节点首次安装建议选择 observe-only。
-2. 确认 Web 后台能看到节点在线。
-3. 观察一段时间是否有 would_drop 误杀。
-4. 确认 SSH、Nginx、业务流量正常。
-5. 再通过 guardd 或 guardd-center 切换到 enforce。
-6. v1.0.1 起，未配置到 service_ports 的端口默认 PASS，不会因为切换防护模式而默认丢弃 SSH、后台端口或其他业务端口。
-7. v1.0.2 起，guardd-center 后台切换防护模式必须同时确认 TCP/UDP 防护端口，并下发到节点。
-8. normal / elevated / critical 只调整已纳入防护端口的 SYN、UDP、ICMP 限速阈值。
-9. 首页只展示实时拉取的节点状态和指标；没有真实指标时显示 0 或空状态，不会再显示演示 QPS、演示地域排行或固定峰值。
-10. v1.0.3 起，guardd-center 只保留总览大屏、节点管理、节点操作三个顶部菜单；节点列表支持编辑节点信息，表格宽度改为自适应当前屏幕。
-11. v1.0.4 起，首页实时数据由 guardd-center 每 3 秒并发拉取所有节点生成，删除节点后实时首页立即移除该节点数据。
-12. v1.0.4 起，添加节点只需要粘贴 guardd 节点导出的 Base64 信息，不再在添加弹窗设置防护端口。
-13. v1.0.5 起，统一安装脚本新增 guardd-test；测试工具支持 XDP 内核自测和 veth 隔离实流测试。
-14. v1.0.8 起，guardd-center 会为每次节点策略下发生成 policy version 和 digest；节点成功应用后上报 applied policy，后台可显示策略漂移并支持回滚到上一个成功策略快照。
-
-
-十二、回滚建议
---------------------------------------------------
-
-如果节点网络异常，优先在节点服务器执行：
-
-guardd
-
-然后选择：
-
-12) 卸载当前 XDP 程序，不删除 guardd
-
-这会卸载 XDP 防护，让流量恢复进入 Linux 协议栈。
-
-如果快捷菜单或中心后台无法访问，但还能进入服务器，可以直接执行：
+如果菜单不可用但还能登录服务器，可执行：
 
 ip link set dev eth0 xdp off
 
-如果网卡不是 eth0，先执行 ip -br addr 查看网卡名后替换。
+如果网卡不是 eth0，先用 ip -br addr 查看网卡名。
 
-注意：停止 guardd 服务不等同于卸载 XDP。v1.0.1 起 systemd 正常停止 guardd 时会尝试自动卸载 XDP，但最稳妥的紧急恢复仍然是执行 ip link set dev 网卡 xdp off。
-
-如果要完全删除节点 Agent，选择：
-
-17) 完全卸载 guardd
-
-
-十三、文件校验
---------------------------------------------------
-
-如果 SHA256SUMS 和安装包在同一目录，Linux 下可以执行：
-
-sha256sum -c SHA256SUMS
-
-确认安装包和脚本未损坏。
-
-> v1.0.9：继续落地最终升级方案：新增 IPv4 CIDR ignore/drop LPM 集合、防锁死优先放行、auto-ban dry-run/临时封禁配置、per-cpu 包/字节统计、XDP ringbuf 采样事件、Prometheus 指标、节点 Web 远程更新、center Web 系统管理/自更新、管理员密码修改、CI 生成 BPF/测试/打包流程。
-
-> v1.0.10：完善防御规则管理体验：自定义规则支持删除、内置规则禁止删除；规则 Key、规则名称、执行模型、执行动作增加详细问号说明；切换执行模型时自动刷新模型说明和参数表单；每个规则参数的帮助说明补充用途、填写范围、影响和推荐灰度流程。
-
-> v1.0.11：补齐 guardd-center 顶部导航入口：IP 集合、系统管理重新显示；系统管理页展示版本、Web 配置、管理员密码维护和 center 检查/执行更新按钮；节点列表“更多”菜单增加检查节点更新和执行节点更新。
-
-> v1.0.13：巡检修复系统管理保存路径和 center 更新目标路径：guardd-center 使用自定义配置文件启动时，Web 保存配置会写回当前配置文件；center 自更新会优先更新实际安装的 /usr/local/bin/guardd-center，找不到时回退到当前运行二进制。
+注意：停止 guardd 服务不等同于卸载 XDP。最稳妥的紧急恢复是卸载 XDP。
