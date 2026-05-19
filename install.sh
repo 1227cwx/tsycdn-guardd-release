@@ -290,7 +290,7 @@ storage:
     tls: $REDIS_TLS
   backup_dir: /var/backups/guardd-center
   retention: {raw_metrics_days: $RAW_DAYS, minute_metrics_days: $MIN_DAYS, hour_metrics_days: $HOUR_DAYS}
-collector: {scrape_interval_seconds: 3, node_timeout_seconds: 8, max_concurrency: 64}
+collector: {scrape_interval_seconds: 3, node_timeout_seconds: 5, max_concurrency: 64}
 audit: {enabled: true, keep_days: 365}
 bootstrap: {admin_username: $ADMIN_USER, admin_password_file: /etc/guardd-center/bootstrap-admin.pass}
 EOF
