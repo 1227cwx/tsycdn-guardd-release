@@ -273,7 +273,6 @@ web:
 security: {session_secret_file: /etc/guardd-center/session.key, master_key_file: /etc/guardd-center/master.key, login_rate_limit_per_minute: 10}
 storage:
   driver: mysql
-  sqlite_path: /var/lib/guardd-center/guardd-center.db
   mysql:
     host: $MYSQL_HOST
     port: $MYSQL_PORT
