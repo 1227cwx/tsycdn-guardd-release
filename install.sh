@@ -123,6 +123,7 @@ install_guardd(){
   install -d -m 0700 /etc/guardd/tls /var/lib/guardd
   printf '%s\n' "$API_KEY" > /etc/guardd/api.key; chmod 600 /etc/guardd/api.key
   if command -v openssl >/dev/null; then openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$NODE_NAME" -keyout /etc/guardd/tls/server.key -out /etc/guardd/tls/server.crt >/dev/null 2>&1; fi
+  WL_TCP="22"; [ "$API_PORT" != "22" ] && WL_TCP="22, $API_PORT"
   cat >/etc/guardd/guardd.yaml <<EOF
 node:
   id: $NODE_NAME
@@ -148,7 +149,7 @@ service_ports:
   tcp: [80, 443]
   udp: [443]
 port_whitelist:
-  tcp: [22]
+  tcp: [$WL_TCP]
   udp: []
 rules:
   enabled: [xdp_tcp_syn_rate, xdp_udp_rate, xdp_icmp_rate, xdp_bad_tcp_flags, xdp_fragment_drop, xdp_malformed_drop, xdp_src_port_zero_drop]
@@ -289,7 +290,7 @@ storage:
     tls: $REDIS_TLS
   backup_dir: /var/backups/guardd-center
   retention: {raw_metrics_days: $RAW_DAYS, minute_metrics_days: $MIN_DAYS, hour_metrics_days: $HOUR_DAYS}
-collector: {scrape_interval_seconds: 3, node_timeout_seconds: 5, max_concurrency: 64}
+collector: {scrape_interval_seconds: 3, node_timeout_seconds: 8, max_concurrency: 64}
 audit: {enabled: true, keep_days: 365}
 bootstrap: {admin_username: $ADMIN_USER, admin_password_file: /etc/guardd-center/bootstrap-admin.pass}
 EOF
@@ -377,5 +378,3 @@ main(){
 }
 
 main "$@"
-
-
